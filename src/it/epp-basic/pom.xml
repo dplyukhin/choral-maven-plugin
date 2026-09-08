@@ -36,6 +36,7 @@
                 <symbol>HelloRoles</symbol>
                 <symbol>GoodbyeRoles</symbol>
               </symbols>
+              <annotate>false</annotate>
             </configuration>
           </execution>
         </executions>

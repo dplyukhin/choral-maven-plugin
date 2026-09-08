@@ -45,8 +45,8 @@ public class EPP extends AbstractMojo {
       required = true)
   private File sourceDirectory;
 
-  /** Where to find Choral header files. */
-  @Parameter private List<File> headerDirectories;
+  /** Directories in which to find Choral header files. */
+  @Parameter private List<File> headers;
 
   /** Where to find Java JARs and classfiles. */
   @Parameter private List<File> classpathEntries;
@@ -78,27 +78,28 @@ public class EPP extends AbstractMojo {
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
     List<String> requestedSymbols = requestedSymbols();
-    validateConfiguration(requestedSymbols);
+    List<String> args = new ArrayList<>();
+    args.add("epp");
+    args.add("--sources=" + sourceDirectory.getAbsolutePath());
+    args.add("--target=" + outputDirectory.getAbsolutePath());
 
-    List<String> commonArguments = new ArrayList<>();
-    commonArguments.add("epp");
-    commonArguments.add("--sources=" + sourceDirectory.getAbsolutePath());
-    commonArguments.add("--target=" + outputDirectory.getAbsolutePath());
-
-    List<File> headers = headerDirectories == null ? Collections.emptyList() : headerDirectories;
-    if (!headers.isEmpty()) {
-      commonArguments.add("--headers=" + joinFiles(headers));
+    if (headers != null) {
+      String s =
+          headers.stream()
+              .map(File::getAbsolutePath)
+              .collect(Collectors.joining(File.pathSeparator));
+      args.add("--headers=" + s);
     }
 
     List<File> explicitClasspath =
         classpathEntries == null ? Collections.emptyList() : classpathEntries;
-    addClasspathArgument(commonArguments, explicitClasspath);
+    addClasspathArgument(args, explicitClasspath);
 
     if (annotate) {
-      commonArguments.add("--annotate");
+      args.add("--annotate");
     }
     if (inferComms) {
-      commonArguments.add("--infer-comms");
+      args.add("--infer-comms");
     }
 
     List<String> requestedWorlds = new ArrayList<>();
@@ -110,7 +111,7 @@ public class EPP extends AbstractMojo {
     }
 
     for (String requestedSymbol : requestedSymbols) {
-      List<String> arguments = new ArrayList<>(commonArguments);
+      List<String> arguments = new ArrayList<>(args);
       arguments.add(requestedSymbol);
       arguments.addAll(requestedWorlds);
 
@@ -135,45 +136,17 @@ public class EPP extends AbstractMojo {
     project.addCompileSourceRoot(outputDirectory.getAbsolutePath());
   }
 
-  private void validateConfiguration(List<String> requestedSymbols) throws MojoFailureException {
-    if (requestedSymbols.isEmpty()) {
-      throw new MojoFailureException(
-          "At least one Choral choreography must be configured with symbol or symbols");
+  private List<String> requestedSymbols() throws MojoFailureException {
+    if (symbol == null && symbols == null) {
+      throw new MojoFailureException("either symbol or symbols must be set");
     }
-    if (!sourceDirectory.isDirectory()) {
-      throw new MojoFailureException("Choral source directory does not exist: " + sourceDirectory);
+    if (symbol != null && symbols != null) {
+      throw new MojoFailureException("symbol and symbols are mutually exclusive");
     }
-    if (headerDirectories != null) {
-      for (File headerDirectory : headerDirectories) {
-        if (headerDirectory == null || !headerDirectory.isDirectory()) {
-          throw new MojoFailureException(
-              "Choral header directory does not exist: " + headerDirectory);
-        }
-      }
+    if (symbol != null) {
+      return List.of(symbol);
     }
-    if (classpathEntries != null) {
-      for (File classpathEntry : classpathEntries) {
-        if (classpathEntry == null || !classpathEntry.exists()) {
-          throw new MojoFailureException(
-              "Choral classpath entry does not exist: " + classpathEntry);
-        }
-      }
-    }
-  }
-
-  private List<String> requestedSymbols() {
-    Set<String> requested = new LinkedHashSet<>();
-    if (symbol != null && !symbol.trim().isEmpty()) {
-      requested.add(symbol.trim());
-    }
-    if (symbols != null) {
-      symbols.stream()
-          .filter(value -> value != null)
-          .map(String::trim)
-          .filter(value -> !value.isEmpty())
-          .forEach(requested::add);
-    }
-    return new ArrayList<>(requested);
+    return symbols;
   }
 
   private void addClasspathArgument(List<String> arguments, List<File> explicitClasspath)
@@ -220,12 +193,6 @@ public class EPP extends AbstractMojo {
     } catch (IOException e) {
       throw new MojoExecutionException("Unable to read the loaded Choral compiler version", e);
     }
-  }
-
-  private static String joinFiles(List<File> files) {
-    return files.stream()
-        .map(File::getAbsolutePath)
-        .collect(Collectors.joining(File.pathSeparator));
   }
 
   private static String normalizePath(String value) {
