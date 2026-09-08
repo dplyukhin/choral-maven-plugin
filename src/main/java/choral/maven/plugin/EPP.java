@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.maven.artifact.versioning.ComparableVersion;
 import org.apache.maven.plugin.AbstractMojo;
@@ -77,7 +75,6 @@ public class EPP extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
-    List<String> requestedSymbols = requestedSymbols();
     List<String> args = new ArrayList<>();
     args.add("epp");
     args.add("--sources=" + sourceDirectory.getAbsolutePath());
@@ -91,9 +88,14 @@ public class EPP extends AbstractMojo {
       args.add("--headers=" + s);
     }
 
-    List<File> explicitClasspath =
-        classpathEntries == null ? Collections.emptyList() : classpathEntries;
-    addClasspathArgument(args, explicitClasspath);
+    List<File> classpath = requestedClasspath();
+    if (!classpath.isEmpty()) {
+      args.add(
+          "--classpath="
+              + classpath.stream()
+                  .map(File::getAbsolutePath)
+                  .collect(Collectors.joining(File.pathSeparator)));
+    }
 
     if (annotate) {
       args.add("--annotate");
@@ -110,6 +112,7 @@ public class EPP extends AbstractMojo {
           .forEach(requestedWorlds::add);
     }
 
+    List<String> requestedSymbols = requestedSymbols();
     for (String requestedSymbol : requestedSymbols) {
       List<String> arguments = new ArrayList<>(args);
       arguments.add(requestedSymbol);
@@ -149,32 +152,24 @@ public class EPP extends AbstractMojo {
     return symbols;
   }
 
-  private void addClasspathArgument(List<String> arguments, List<File> explicitClasspath)
-      throws MojoExecutionException, MojoFailureException {
+  private List<File> requestedClasspath() throws MojoExecutionException, MojoFailureException {
     String version = readChoralVersion();
-    if (new ComparableVersion(version).compareTo(MINIMUM_CLASSPATH_VERSION) < 0) {
-      if (!explicitClasspath.isEmpty()) {
+    boolean unsupported = new ComparableVersion(version).compareTo(MINIMUM_CLASSPATH_VERSION) < 0;
+    if (unsupported) {
+      if (classpathEntries != null)
         throw new MojoFailureException(
-            "Choral classpath support requires Choral 0.1.13 or newer; loaded Choral " + version);
-      }
-      return;
+            "Classpath parameter requires Choral 0.1.13+; your version is " + version);
+      else return Collections.emptyList();
     }
 
-    Set<String> classpath = new LinkedHashSet<>();
+    List<File> classpath = new ArrayList<>();
+    if (classpathEntries != null) {
+      classpath.addAll(classpathEntries);
+    }
     if (compileClasspathElements != null) {
-      compileClasspathElements.stream()
-          .filter(value -> value != null && !value.trim().isEmpty())
-          .map(EPP::normalizePath)
-          .forEach(classpath::add);
+      compileClasspathElements.stream().map(File::new).forEach(classpath::add);
     }
-    explicitClasspath.stream()
-        .map(File::getAbsolutePath)
-        .map(EPP::normalizePath)
-        .forEach(classpath::add);
-
-    if (!classpath.isEmpty()) {
-      arguments.add("--classpath=" + String.join(File.pathSeparator, classpath));
-    }
+    return classpath;
   }
 
   private String readChoralVersion() throws MojoExecutionException {
@@ -193,9 +188,5 @@ public class EPP extends AbstractMojo {
     } catch (IOException e) {
       throw new MojoExecutionException("Unable to read the loaded Choral compiler version", e);
     }
-  }
-
-  private static String normalizePath(String value) {
-    return new File(value).toPath().toAbsolutePath().normalize().toString();
   }
 }
