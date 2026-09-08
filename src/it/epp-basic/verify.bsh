@@ -1,0 +1,16 @@
+File generatedA = new File(basedir, "target/generated-sources/choral/example/HelloRoles_A.java");
+File generatedB = new File(basedir, "target/generated-sources/choral/example/HelloRoles_B.java");
+File generatedGoodbye =
+        new File(basedir, "target/generated-sources/choral/example/GoodbyeRoles.java");
+File compiledA = new File(basedir, "target/classes/example/HelloRoles_A.class");
+File compiledB = new File(basedir, "target/classes/example/HelloRoles_B.class");
+File compiledGoodbye = new File(basedir, "target/classes/example/GoodbyeRoles.class");
+
+if (!generatedA.isFile() || !generatedB.isFile() || !generatedGoodbye.isFile()) {
+    throw new RuntimeException("Endpoint projection did not generate all expected Java files");
+}
+if (!compiledA.isFile() || !compiledB.isFile() || !compiledGoodbye.isFile()) {
+    throw new RuntimeException("Maven did not compile all generated endpoint classes");
+}
+
+return true;

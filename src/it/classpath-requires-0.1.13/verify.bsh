@@ -1,0 +1,8 @@
+File logFile = new File(basedir, "build.log");
+String log = new String(java.nio.file.Files.readAllBytes(logFile.toPath()), "UTF-8");
+
+if (!log.contains("Choral classpath support requires Choral 0.1.13 or newer; loaded Choral 0.1.12")) {
+    throw new RuntimeException("Build did not report the expected Choral classpath version error");
+}
+
+return true;
