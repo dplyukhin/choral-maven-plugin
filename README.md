@@ -1,4 +1,4 @@
-# Choral Maven Plugin
+# Choral Maven Plugin [![Integration Tests](https://github.com/dplyukhin/choral-maven-plugin/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/dplyukhin/choral-maven-plugin/actions/workflows/integration-tests.yml)
 
 Provides the `epp` goal, which is the Maven equivalent of `choral epp`. It projects one or more choreographies and adds the generated Java files to the project's compile sources.
 
