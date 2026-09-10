@@ -1,5 +1,4 @@
-# Choral Maven Plugin ![Latest Release](https://img.shields.io/github/v/release/choral-lang/choral-maven-plugin
-) [![Integration Tests](https://github.com/choral-lang/choral-maven-plugin/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/choral-lang/choral-maven-plugin/actions/workflows/integration-tests.yml)
+# Choral Maven Plugin ![Latest Release](https://img.shields.io/github/v/release/choral-lang/choral-maven-plugin) [![Integration Tests](https://github.com/choral-lang/choral-maven-plugin/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/choral-lang/choral-maven-plugin/actions/workflows/integration-tests.yml)
 
 Provides the `epp` goal, which is the Maven equivalent of `choral epp`. It projects one or more choreographies and adds the generated Java files to the project's compile sources.
 
