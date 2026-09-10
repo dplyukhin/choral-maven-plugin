@@ -1,25 +1,18 @@
-# Choral Maven Plugin [![Integration Tests](https://github.com/dplyukhin/choral-maven-plugin/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/dplyukhin/choral-maven-plugin/actions/workflows/integration-tests.yml)
+# Choral Maven Plugin ![Latest Release](https://img.shields.io/github/v/release/choral-lang/choral-maven-plugin
+) [![Integration Tests](https://github.com/choral-lang/choral-maven-plugin/actions/workflows/integration-tests.yml/badge.svg)](https://github.com/choral-lang/choral-maven-plugin/actions/workflows/integration-tests.yml)
 
 Provides the `epp` goal, which is the Maven equivalent of `choral epp`. It projects one or more choreographies and adds the generated Java files to the project's compile sources.
 
-## Build the plugin
-
-Until the plugin is published, install it in your local Maven repository:
-
-```shell
-mvn install
-```
-
 ## Use the `epp` goal
 
-Put Choral sources in `src/main/choral`. To compile one Choral class named `HelloRoles`, use this minimum configuration:
+Put Choral sources in `src/main/choral`. To compile a Choral class named `HelloRoles`, use this configuration:
 
 ```xml
 <properties>
   <!-- Configure which version of the Choral compiler you want here. -->
-  <choral.version>0.1.12</choral.version>
+  <choral.version>0.1.13</choral.version>
   <!-- Configure which version of Choral Maven Plugin you want here. -->
-  <choral-maven-plugin.version>1.0.0-SNAPSHOT</choral-maven-plugin.version>
+  <choral-maven-plugin.version>0.1.0</choral-maven-plugin.version>
   <maven.compiler.release>8</maven.compiler.release>
 </properties>
 
@@ -57,3 +50,17 @@ Put Choral sources in `src/main/choral`. To compile one Choral class named `Hell
 ```
 
 The goal runs in `generate-sources` and writes to `target/generated-sources/choral` by default.
+
+## Local Development
+
+### Build the plugin
+
+Install a development snapshot in your local Maven repository:
+
+```shell
+mvn install
+```
+
+### Issuing a new release
+
+To release the plugin, [publish a GitHub release](https://github.com/choral-lang/choral-maven-plugin/releases/new) whose tag has the exact format `v#.#.#`, for example `v1.0.0`. Publishing the release triggers the [Maven Central Release workflow](https://github.com/choral-lang/choral-maven-plugin/actions/workflows/maven-publish.yml).

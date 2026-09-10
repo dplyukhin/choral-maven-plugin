@@ -1,0 +1,46 @@
+# Build, sign, and publish the plugin to Maven Central when a GitHub Release is published.
+name: Publish to Maven Central
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+          server-id: central
+          server-username: MAVEN_USERNAME
+          server-password: MAVEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+
+      - name: Validate release tag
+        shell: bash
+        env:
+          TAG_NAME: ${{ github.event.release.tag_name }}
+        run: |
+          if [[ ! "$TAG_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Release tag '$TAG_NAME' must match v#.#.#" >&2
+            exit 1
+          fi
+
+          echo "PLUGIN_VERSION=${TAG_NAME#v}" >> "$GITHUB_ENV"
+
+      - name: Build and publish package
+        run: mvn --batch-mode --no-transfer-progress -Drevision="$PLUGIN_VERSION" -P release deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_SIGNING_KEY_PASSWORD }}
